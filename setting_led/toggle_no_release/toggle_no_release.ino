@@ -7,10 +7,6 @@ const int ledD4 = D4; // D4 LED
 const int buttonD5 = D5; // D5 button
 const int buttonD6 = D6; // D6 button
 
-// Flags to track LED states
-bool leds12On = false;
-bool leds34On = false;
-
 void setup() {
   // Initialize LEDs as OUTPUT
   pinMode(ledD1, OUTPUT);
@@ -33,11 +29,11 @@ void loop() {
   if (stateD5 == LOW) {
     digitalWrite(ledD1, HIGH); // Turn on D1 LED
     digitalWrite(ledD2, HIGH); // Turn on D2 LED
-    leds12On = true;
+    Serial.println("Button D5 Pressed");
   } else {
     digitalWrite(ledD1, LOW); // Turn off D1 LED
     digitalWrite(ledD2, LOW); // Turn off D2 LED
-    leds12On = false;
+    Serial.println("Button D5 Released");
   }
 
   // Read the state of button D6
@@ -46,24 +42,11 @@ void loop() {
   if (stateD6 == LOW) {
     digitalWrite(ledD3, HIGH); // Turn on D3 LED
     digitalWrite(ledD4, HIGH); // Turn on D4 LED
-    leds34On = true;
+    Serial.println("Button D6 Pressed");
   } else {
     digitalWrite(ledD3, LOW); // Turn off D3 LED
     digitalWrite(ledD4, LOW); // Turn off D4 LED
-    leds34On = false;
-  }
-
-  // Print the appropriate message based on LED states
-  if (leds12On) {
-    Serial.println("Lampu 1 dan 2 hidup");
-  } else {
-    Serial.println("Lampu 1 dan 2 mati");
-  }
-
-  if (leds34On) {
-    Serial.println("Lampu 3 dan 4 hidup");
-  } else {
-    Serial.println("Lampu 3 dan 4 mati");
+    Serial.println("Button D6 Released");
   }
 
   delay(100); // Add a small delay to debounce the buttons
