@@ -1,72 +1,67 @@
-//Include library untuk koneksi ke WIfi
+// Include library untuk koneksi ke WIfi
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WiFi.h>
 
-//konfigurasi wifi
-const char* ssid = "iPhone pc";
-const char* password = "dtrias1971";
+// konfigurasi wifi
+const char *ssid = "Agim";
+const char *password = "gakdipassword";
 
-//alamat IP Address Server
-String IPAddr ="172.20.10.9";
+// alamat IP Address Server
+String host = "dehidrasi.yoganova.my.id";
 
-//Siapkan object client
-WiFiClient NodeMCU;
+#define pin_relay 16 // D0
 
-
-//Siapkan pin untuk LED
-#define PinLED 5 // GPIO5 = D1
-
-
-void setup() {
-//Aktifkan Serial
-Serial.begin(9600);
-
-//koneksi WiFI
-WiFi.hostname("NodeMCU");
-WiFi.begin(ssid, password);
-//uji status koneksi WiFI
-while(WiFi.status() != WL_CONNECTED)
+void setup()
 {
-  //koneksi terus
-  digitalWrite(PinLED, LOW);
-  Serial.print(".");
-  delay(500);
-}
-// Apabila sudah konek
-Serial.println("Berhasil Konek");
-//apabila terkoneksi nyalakan lampu LED
-digitalWrite(PinLED, HIGH);
+  Serial.begin(9600);
 
+  WiFi.hostname("NodeMCU");
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    Serial.print(".");
+    delay(500);
+  }
+
+  Serial.println("Berhasil Konek");
+
+  pinMode(pin_relay, OUTPUT);
 }
 
-void loop() {
-//pastikan koneksi web server berhasil
-if(!NodeMCU.connect(IPAddr, 80))
+void loop()
 {
-  Serial.println("Gagal Koneksi ke WEB SERVER");
-  return ;
-}
+  WiFiClient client;
+  const int httpPort = 80;
+  if (!client.connect(host, httpPort))
+  {
+    Serial.println("Koneksi Gagal");
+    return;
+  }
 
+  String LinkRelay;
+  HTTPClient httpRelay;
+  LinkRelay = "http://" + String(host) + "/kontroling/bacarelay.php";
+  httpRelay.begin(client, LinkRelay);
+  httpRelay.GET();
+  String responseRelay = httpRelay.getString();
+  Serial.println(responseRelay);
+  httpRelay.end();
 
+  // digitalWrite(pin_relay, responseRelay.toInt());
 
-int sensorValue = analogRead(0);
-//mapping nilai sensor
-int kekeruhan = map(sensorValue, 0, 750, 0, 100);
-
-//Tampilkan nilai di serial monitor;
-Serial.println(kekeruhan);
-
-//kirim data ke database / aplikasi website
-HTTPClient http;
-String url="http://"+IPAddr+"/monitoringair/kirimdata.php?sensor=" + String(kekeruhan);
-
-//eksekusi link URL
-http.begin(NodeMCU, url);
-
-//mode GET
-http.GET();
-//akhiri proses kirim data
-http.end();
-
-delay(500);
+  if (responseRelay.equals("1"))
+  {
+    Serial.println("Relay ON");
+    digitalWrite(pin_relay, 0);
+  }
+  else if (responseRelay.equals("0"))
+  {
+    Serial.println("Relay OFF");
+    digitalWrite(pin_relay, 1);
+  }
+  else
+  {
+    Serial.println("Unexpected value: " + responseRelay);
+  }
 }
