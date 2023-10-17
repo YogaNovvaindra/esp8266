@@ -1,4 +1,7 @@
 #include <Adafruit_ADS1X15.h>
+#include "DHTesp.h"
+
+DHTesp dht;
 Adafruit_ADS1115 ads;  /* Use this for the 16-bit version */
 //Adafruit_ADS1015 ads;     /* Use this for the 12-bit version */
 const float MQ2_RL = 10.0;   // Load resistance in ohms
@@ -22,7 +25,8 @@ const float MQ2_R0 = 10.0;   // Sensor resistance at clean air in ohms
 void setup(void)
 {
   Serial.begin(9600);
- 
+
+  dht.setup(0, DHTesp::DHT22); //DHT Sensor
   Serial.println("Getting single-ended readings from AIN0..3");
   Serial.println("ADC Range: +/- 6.144V (1 bit = 3mV/ADS1015, 0.1875mV/ADS1115)");
  
@@ -63,8 +67,8 @@ void loop(void)
   Serial.println("-----------------------------------------------------------");
   Serial.print("AIN0: "); Serial.print(adc0); Serial.print("  "); Serial.print(volts0); Serial.println("V");
   Serial.print("AIN1: "); Serial.print(adc1); Serial.print("  "); Serial.print(volts1); Serial.println("V");
-  Serial.print("AIN2: "); Serial.print(adc2); Serial.print("  "); Serial.print(volts2); Serial.println("V");
-  Serial.print("AIN3: "); Serial.print(adc3); Serial.print("  "); Serial.print(volts3); Serial.println("V");
+  // Serial.print("AIN2: "); Serial.print(adc2); Serial.print("  "); Serial.print(volts2); Serial.println("V");
+  // Serial.print("AIN3: "); Serial.print(adc3); Serial.print("  "); Serial.print(volts3); Serial.println("V");
 
   // Calculate resistance of the MQ-2 sensor
   float mq2_sensorResistance = (MQ2_RL * volts0) / (5.0 - volts0);
@@ -77,13 +81,8 @@ void loop(void)
   // Calculate resistance of the MQ-135 sensor
   float mq135_sensorResistance = (MQ135_RL * volts1) / (5.0 - volts1);
 
-  // Calculate CO2 ppm value for MQ-135 sensor using calibration formula
   float mq135_co2 = pow(10, ((log10(mq135_sensorResistance) - log10(MQ135_CO2)) / (-MQ135_CO2)) + log10(MQ135_CO2));
-  
-  // Calculate CO ppm value for MQ-135 sensor using calibration formula
   float mq135_co = pow(10, ((log10(mq135_sensorResistance) - log10(MQ135_CO)) / (-MQ135_CO)) + log10(MQ135_CO));
-  
-  // Calculate NH4 ppm value for MQ-135 sensor using calibration formula
   float mq135_nh4 = pow(10, ((log10(mq135_sensorResistance) - log10(MQ135_NH4)) / (-MQ135_NH4)) + log10(MQ135_NH4));
 
   Serial.print("MQ-2 LPG PPM: "); Serial.println(mq2_lpg);
@@ -93,5 +92,14 @@ void loop(void)
   Serial.print("MQ-135 CO PPM: "); Serial.println(mq135_co);
   Serial.print("MQ-135 NH4 PPM: "); Serial.println(mq135_nh4);
 
+  //dht22
+    float h = dht.getHumidity();
+  float t = dht.getTemperature();
+  Serial.print("{\" Kelembaban\" : ");
+  Serial.print(h);
+  Serial.print("%, \"Temperatur\" : ");
+  Serial.print(t);
+  Serial.print("°C }\n");
+  //end dht
   delay(2000);
 }
